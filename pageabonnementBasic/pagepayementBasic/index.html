@@ -1,0 +1,306 @@
+
+<?php
+session_start();
+$firstname = $_SESSION["firstname"];
+$lastname = $_SESSION['lastname'];
+$email = $_SESSION['email'];
+$cin = $_SESSION['cin'];
+$datedeN = $_SESSION['datedeN'];
+$password = $_SESSION['password']; // Hashage du mot de passe
+$adresse = $_SESSION['adresse'];
+$genre = $_SESSION['genre'];
+$tel = $_SESSION['tel'];
+$Dure = $_SESSION['Dure'];
+$activite = $_SESSION['activite'];
+$basic = "basic";
+
+if (isset($_POST["boutton"])) {
+  
+  try {
+    $conn = new PDO("mysql:host=localhost;dbname=complexe2", "root", "");
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Préparer et exécuter la requête pour obtenir l'Idabonnement
+    $query4 = "SELECT Idabonnement FROM abonnement WHERE Duree = :Dure and Typeabonnement = :basic";
+    $stmt4 = $conn->prepare($query4);
+    $stmt4->bindParam(':Dure', $Dure);
+    $stmt4->bindParam(':basic', $basic);
+    $stmt4->execute();
+
+    // Récupérer le résultat de la requête
+    $result = $stmt4->fetch(PDO::FETCH_ASSOC);
+
+    // Vérifiez si un abonnement a été trouvé
+    if ($result) {
+        $ab = $result['Idabonnement'];
+        // Vous pouvez maintenant utiliser la variable $ab
+        // echo "Idabonnement: " . $ab;
+    }// else {
+    //     echo "Aucun abonnement trouvé pour les critères spécifiés.";
+    // }
+
+    // Préparer et exécuter la requête pour obtenir l'Idactivite
+    $query5 = "SELECT Idactivite FROM activite WHERE Nomactivite = :activite";
+    $stmt5 = $conn->prepare($query5);
+    $stmt5->bindParam(':activite', $activite);
+    $stmt5->execute();
+
+    // Récupérer le résultat de la requête
+    $result = $stmt5->fetch(PDO::FETCH_ASSOC);
+
+    // Vérifiez si une activité a été trouvée
+    if ($result) {
+        $ac = $result['Idactivite'];
+        // Vous pouvez maintenant utiliser la variable $ac
+        // echo "Idactivite: " . $ac;
+    }// else {
+    //     echo "Aucune activité trouvée pour les critères spécifiés.";
+    // }
+
+    // Préparer et exécuter la requête d'insertion pour l'abonné
+    $query2 = "INSERT INTO abonne (Nom, Prenom, Email, Adresse, CIN, Datenaiss, Tel, Password, Idabonnement, Idactivite) 
+               VALUES (:firstname, :lastname, :email, :adresse, :cin, :datedeN, :tel, :password, :ab, :ac)";
+    $stmt2 = $conn->prepare($query2);
+    $stmt2->bindValue(':firstname', $firstname);
+    $stmt2->bindValue(':lastname', $lastname);
+    $stmt2->bindValue(':email', $email);
+    $stmt2->bindValue(':cin', $cin);
+    $stmt2->bindValue(':datedeN', $datedeN);
+    $stmt2->bindValue(':adresse', $adresse);
+    $stmt2->bindValue(':tel', $tel);
+    $stmt2->bindValue(':password', $password);
+    $stmt2->bindValue(':ab', $ab);
+    $stmt2->bindValue(':ac', $ac);
+    $stmt2->execute();
+
+    // Récupération de l'ID généré pour l'abonné
+    $idAbonne = $conn->lastInsertId();
+
+    // Vérifiez si l'ID généré est bien récupéré
+    // if (!$idAbonne) {
+    //     throw new Exception("Erreur : impossible de récupérer l'ID généré pour l'abonné.");
+    // } else {
+    //     echo "L'abonné a été ajouté avec succès. ID: " . $idAbonne;
+      
+    // }
+    header("Location:ff/aprecnxx.html");
+
+  } catch (PDOException $e) {
+    // Capture de l'erreur et affichage du message
+    echo "Erreur lors de l'exécution de la requête SQL : " . $e->getMessage();
+  } catch (Exception $e) {
+    // Capture de l'erreur et affichage du message
+    echo $e->getMessage();
+  }
+  
+  
+  exit;
+}
+
+    
+
+// Les variables de validation
+$Cvvpatern = "/^\d{3}$/";
+$NameC = "";
+$Credit = "";
+$Expmy = "";
+$Cvv = "";
+$errNamec = "";
+$errCredit = "";
+$errExpmy = "";
+$errCvv = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $NameC = $_POST["NameC"];
+    $Credit = $_POST["Credit"];
+    $Expmy = $_POST["Expmy"];
+    $Cvv = $_POST["Cvv"];
+
+    if (empty($NameC)) {
+        $errNamec = "You must enter your Name On Card";
+    } elseif (!preg_match("/^[A-Za-z ]{1,20}$/", $NameC)) {
+        $errNamec = "Name must contain only letters and be a maximum of 20 characters long";
+    }
+    if (empty($Credit)) {
+        $errCredit = "You must enter your Credit Card number";
+    }
+    if (empty($Expmy)) {
+        $errExpmy = "You must enter your Card expiration month";
+    }
+    if (empty($Cvv)) {
+        $errCvv = "You must enter your CVV";
+    } elseif (!preg_match($Cvvpatern, $Cvv)) {
+        $errCvv = "Invalid CVV format";
+    }
+
+    if (empty($errCredit) && empty($errExpmy) && empty($errCvv) && empty($errNamec)) {
+        echo "All inputs are valid!";
+    } else {
+        echo "Error in inputs!";
+    }
+}
+?>
+
+
+
+<style>
+
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: azure;
+}
+
+.container{
+    width: 750px;
+    height: 500px;
+    border: 1px solid;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    justify-content:space-around;
+}
+
+.container h1{
+    text-align: center;
+}
+
+.first-row{
+     display: flex;
+}
+
+.owner{
+    width: 100%;
+    margin-right: 40px;
+}
+
+.input-field{
+    border: 1px solid #999;
+}
+
+.input-field input{
+    width: 100%;
+    border:none;
+    outline: none;
+    padding: 10px;
+}
+
+.selection{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selection select{
+    padding: 10px 20px;
+}
+
+.btn{
+    background-color: rgb(89, 86, 92);
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 10px;
+    font-size: 18px;
+    transition: 0.5s;
+}
+
+.btn:hover{
+    background-color: rgb(255, 217, 1);
+
+}
+
+.cards img{
+    width: 100px;
+}
+</style>
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Form</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <form action="" method="post">
+    <div class="container">
+        <h1>Confirm Your Payment</h1>
+        <div class="first-row">
+            <div class="owner">
+                <h3>Owner</h3>
+                <div class="input-field">
+                    <input type="text">
+                </div>
+            </div>
+            <div class="cvv">
+                <h3>CVV</h3>
+                <div class="input-field">
+                    <input type="password">
+                </div>
+            </div>
+        </div>
+        <div class="second-row">
+            <div class="card-number">
+                <h3>Card Number</h3>
+                <div class="input-field">
+                    <input type="text">
+                </div>
+            </div>
+        </div>
+        <div class="third-row">
+            <h3>Card Number</h3>
+            <div class="selection">
+                <div class="date">
+                    <select name="months" id="months">
+                        <option value="Jan">Jan</option>
+                        <option value="Feb">Feb</option>
+                        <option value="Mar">Mar</option>
+                        <option value="Apr">Apr</option>
+                        <option value="May">May</option>
+                        <option value="Jun">Jun</option>
+                        <option value="Jul">Jul</option>
+                        <option value="Aug">Aug</option>
+                        <option value="Sep">Sep</option>
+                        <option value="Oct">Oct</option>
+                        <option value="Nov">Nov</option>
+                        <option value="Dec">Dec</option>
+                      </select>
+                      <select name="years" id="years">
+                        <option value="2020">2020</option>
+                        <option value="2019">2019</option>
+                        <option value="2018">2018</option>
+                        <option value="2017">2017</option>
+                        <option value="2016">2016</option>
+                        <option value="2015">2015</option>
+                      </select>
+                </div>
+                <div class="cards">
+                    <img src="mc.png" alt="">
+                    <img src="vi.png" alt="">
+                    <img src="pp.png" alt="">
+                </div>
+            </div>    
+        </div>
+        <input type="submit" value="Comfirm" class="btn" name="button">
+    </div>
+</form>
+</body>
+</html>
